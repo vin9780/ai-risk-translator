@@ -1,15 +1,6 @@
 import random
 
-class Trade:
-    def __init__(self, trade_id, book, instrument, notional, dv01):
-        self.trade_id = trade_id
-        self.book = book
-        self.instrument = instrument
-        self.notional = notional
-        self.dv01 = dv01
-
-    def __repr__(self):
-        return f"Trade({self.trade_id}, {self.book}, {self.instrument}, dv01={self.dv01:,.2f})"
+from app.models import Trade
 
 BOOKS = ["RATES", "CREDIT", "FX"]
 
@@ -22,31 +13,36 @@ INSTRUMENTS = {
 LIMITS = {"RATES": 10_000, "CREDIT": 5_000, "FX": 8_000}
 
 
-def generate_trades(n):
+def generate_trades(n: int) -> list[Trade]:
     trades = []
-    for i in range(1, n+1):
+    for i in range(1, n + 1):
         book = random.choice(BOOKS)
-        trade = Trade(
-            trade_id=f"T{i:03d}",
-            book=book,
-            instrument=random.choice(INSTRUMENTS[book]),
-            notional=round(random.uniform(1_000_000, 50_000_000), 2),
-            dv01=round(random.uniform(-5000, 5000), 2),
+        trades.append(
+            Trade(
+                trade_id=f"T{i:03d}",
+                book=book,
+                instrument=random.choice(INSTRUMENTS[book]),
+                notional=round(random.uniform(1_000_000, 50_000_000), 2),
+                dv01=round(random.uniform(-5000, 5000), 2),
+            )
         )
-        trades.append(trade)
     return trades
 
-def dv01_by_book(trades):
-    totals = {}
+
+def dv01_by_book(trades: list[Trade]) -> dict[str, float]:
+    totals: dict[str, float] = {}
     for t in trades:
         totals[t.book] = totals.get(t.book, 0) + t.dv01
     return totals
 
 
-def largest_risk(trades):
+def largest_risk(trades: list[Trade]) -> Trade:
     return max(trades, key=lambda t: abs(t.dv01))
 
-def check_limits(totals, limits):
+
+def check_limits(
+    totals: dict[str, float], limits: dict[str, int]
+) -> list[tuple[str, float, int]]:
     breaches = []
     for book, total in totals.items():
         limit = limits.get(book)
