@@ -39,4 +39,23 @@ def test_negative_notional_rejected_by_api():
         "dv01": 1.0
     }
     response = client.post("/trades", json=trade_data)
-    assert response.status_code == 422        
+    assert response.status_code == 422 
+
+def test_risk_credit_breach():
+    response = client.get("/risk/CREDIT")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["book"] == "CREDIT"
+    assert data["breach"] is True
+
+def test_risk_fx_no_breach():
+    response = client.get("/risk/FX")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["book"] == "FX"
+    assert data["breach"] is False
+
+def test_risk_invalid_book():
+    response = client.get("/risk/BANANA")
+    assert response.status_code == 422
+    data = response.json()
