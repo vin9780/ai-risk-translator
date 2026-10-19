@@ -11,3 +11,11 @@ class Trade(BaseModel):
     instrument: str
     notional: float = Field(gt=0)
     dv01: float
+
+class RiskSummary(BaseModel):
+    book: Book
+    total_dv01: float
+    trade_count: int
+    largest_trade: Trade | None
+    limit: int
+    breach: bool    

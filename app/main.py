@@ -2,8 +2,8 @@ import random
 
 from fastapi import FastAPI, HTTPException, Query
 
-from app.models import Book, Trade
-from app.risk_data import generate_trades
+from app.models import Book, RiskSummary, Trade
+from app.risk_data import LIMITS, generate_trades, largest_risk
 
 app = FastAPI(title="AI Risk Translator")
 
@@ -34,3 +34,19 @@ def get_trade(trade_id: str):
 def add_trade(trade: Trade):
     TRADES.append(trade)
     return trade
+
+@app.get("/risk/{book}", response_model= RiskSummary)
+def get_book_risk(book: Book):
+    if book not in LIMITS:
+        raise HTTPException(status_code=422, detail=f"Invalid book: {book}")
+    trades = [t for t in TRADES if t.book == book]
+    total = round(sum(t.dv01 for t in trades), 2)
+    limit = LIMITS[book]
+    return RiskSummary(
+        book=book,
+        total_dv01=total,
+        trade_count=len(trades),
+        largest_trade=largest_risk(trades) if trades else None,
+        limit=limit,
+        breach=abs(total) > limit,
+    )
