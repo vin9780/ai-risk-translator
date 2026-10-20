@@ -59,3 +59,15 @@ def test_risk_invalid_book():
     response = client.get("/risk/BANANA")
     assert response.status_code == 422
     data = response.json()
+
+def test_explain_uses_risk_summary(monkeypatch):
+    def fake_explain(summary):
+        return f"Fake explanation for {summary.book}"
+
+    monkeypatch.setattr("app.main.explain_risk", fake_explain)
+
+    response = client.post("/explain", json={"book": "CREDIT"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["explanation"] == "Fake explanation for CREDIT"
+    assert data["summary"]["breach"] is True

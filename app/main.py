@@ -1,14 +1,21 @@
 import random
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import RedirectResponse
 
-from app.models import Book, RiskSummary, Trade
+from app.llm import explain_risk
+from app.models import Book, ExplainRequest, ExplainResponse, RiskSummary, Trade
 from app.risk_data import LIMITS, generate_trades, largest_risk
 
 app = FastAPI(title="AI Risk Translator")
 
 random.seed(42)
 TRADES: list[Trade] = generate_trades(20)
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/health")
@@ -35,10 +42,8 @@ def add_trade(trade: Trade):
     TRADES.append(trade)
     return trade
 
-@app.get("/risk/{book}", response_model= RiskSummary)
-def get_book_risk(book: Book):
-    if book not in LIMITS:
-        raise HTTPException(status_code=422, detail=f"Invalid book: {book}")
+
+def build_risk_summary(book: Book) -> RiskSummary:
     trades = [t for t in TRADES if t.book == book]
     total = round(sum(t.dv01 for t in trades), 2)
     limit = LIMITS[book]
@@ -50,3 +55,15 @@ def get_book_risk(book: Book):
         limit=limit,
         breach=abs(total) > limit,
     )
+
+
+@app.get("/risk/{book}", response_model=RiskSummary)
+def get_book_risk(book: Book):
+    return build_risk_summary(book)
+
+
+@app.post("/explain", response_model=ExplainResponse)
+def explain(request: ExplainRequest):
+    summary = build_risk_summary(request.book)
+    explanation = explain_risk(summary)
+    return ExplainResponse(book=request.book, summary=summary, explanation=explanation)

@@ -19,3 +19,11 @@ class RiskSummary(BaseModel):
     largest_trade: Trade | None
     limit: int
     breach: bool    
+
+class ExplainRequest(BaseModel):
+    book: Book
+
+class ExplainResponse(BaseModel):
+    book: Book
+    summary: RiskSummary
+    explanation: str    
