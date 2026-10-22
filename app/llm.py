@@ -27,3 +27,20 @@ def explain_risk(summary: RiskSummary) -> str:
         ],
     )
     return "".join(b.text for b in response.content if b.type == "text")
+
+def stream_explanation(summary: RiskSummary):
+    with client.messages.stream(
+        model="claude-haiku-5-5",
+        max_tokens=300,
+        thinking={"type": "disabled"},
+        system=SYSTEM_PROMPT,
+        messages=[
+            {
+                "role": "user",
+                "content": f"Explain this risk summary:\n{summary.model_dump_json(indent=2)}",
+            }
+        ],
+    ) as stream:
+        for text in stream.text_stream:
+            yield text
+            
