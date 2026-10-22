@@ -71,3 +71,14 @@ def test_explain_uses_risk_summary(monkeypatch):
     data = response.json()
     assert data["explanation"] == "Fake explanation for CREDIT"
     assert data["summary"]["breach"] is True
+
+def test_explain_stream_returns_chunks(monkeypatch):
+    def fake_stream(summary):
+        yield "Chunk one. "
+        yield f"Book is {summary.book}."
+
+    monkeypatch.setattr("app.main.stream_explanation", fake_stream)
+
+    response = client.post("/explain/stream", json={"book": "CREDIT"})
+    assert response.status_code == 200
+    assert response.text == "Chunk one. Book is CREDIT."

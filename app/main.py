@@ -1,9 +1,9 @@
 import random
 
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 
-from app.llm import explain_risk
+from app.llm import explain_risk, stream_explanation
 from app.models import Book, ExplainRequest, ExplainResponse, RiskSummary, Trade
 from app.risk_data import LIMITS, generate_trades, largest_risk
 
@@ -67,3 +67,11 @@ def explain(request: ExplainRequest):
     summary = build_risk_summary(request.book)
     explanation = explain_risk(summary)
     return ExplainResponse(book=request.book, summary=summary, explanation=explanation)
+
+@app.post("/explain/stream")
+def explain_stream(request: ExplainRequest):
+    summary = build_risk_summary(request.book)
+    return StreamingResponse(
+        stream_explanation(summary),
+        media_type="text/plain",
+    )
