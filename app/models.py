@@ -25,7 +25,15 @@ class RiskSummary(BaseModel):
 class ExplainRequest(BaseModel):
     book: Book
 
+class ExplanationOutput(BaseModel):
+    """The JSON shape Claude must return."""
+    explanation: str
+    key_drivers: list[str] = []
+
+
 class ExplainResponse(BaseModel):
     book: Book
     summary: RiskSummary
-    explanation: str    
+    explanation: str
+    key_drivers: list[str] = []
+    source: Literal["claude", "claude_retry", "fallback"] = "claude"    
