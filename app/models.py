@@ -18,12 +18,22 @@ class RiskSummary(BaseModel):
     trade_count: int
     largest_trade: Trade | None
     limit: int
-    breach: bool    
+    breach: bool
+    over_by: float = 0.0     # how far over the limit (0 if within) - calculated by code
+    headroom: float = 0.0    # room left before the limit (0 if breached) - calculated by code    
 
 class ExplainRequest(BaseModel):
     book: Book
 
+class ExplanationOutput(BaseModel):
+    """The JSON shape Claude must return."""
+    explanation: str
+    key_drivers: list[str] = []
+
+
 class ExplainResponse(BaseModel):
     book: Book
     summary: RiskSummary
-    explanation: str    
+    explanation: str
+    key_drivers: list[str] = []
+    source: Literal["claude", "claude_retry", "fallback"] = "claude"    

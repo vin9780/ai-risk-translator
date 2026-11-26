@@ -61,16 +61,19 @@ def test_risk_invalid_book():
     data = response.json()
 
 def test_explain_uses_risk_summary(monkeypatch):
-    def fake_explain(summary):
-        return f"Fake explanation for {summary.book}"
+    from app.models import ExplanationOutput
 
-    monkeypatch.setattr("app.main.explain_risk", fake_explain)
+    def fake_request(summary, extra=None):
+        return ExplanationOutput(explanation=f"Fake explanation for {summary.book}")
+
+    monkeypatch.setattr("app.llm.request_explanation", fake_request)
 
     response = client.post("/explain", json={"book": "CREDIT"})
     assert response.status_code == 200
     data = response.json()
     assert data["explanation"] == "Fake explanation for CREDIT"
     assert data["summary"]["breach"] is True
+    assert data["source"] == "claude"
 
 def test_explain_stream_returns_chunks(monkeypatch):
     def fake_stream(summary):
