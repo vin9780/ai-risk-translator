@@ -18,7 +18,9 @@ class RiskSummary(BaseModel):
     trade_count: int
     largest_trade: Trade | None
     limit: int
-    breach: bool    
+    breach: bool
+    over_by: float = 0.0     # how far over the limit (0 if within) - calculated by code
+    headroom: float = 0.0    # room left before the limit (0 if breached) - calculated by code    
 
 class ExplainRequest(BaseModel):
     book: Book

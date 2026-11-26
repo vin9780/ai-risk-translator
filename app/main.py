@@ -54,6 +54,8 @@ def build_risk_summary(book: Book) -> RiskSummary:
         largest_trade=largest_risk(trades) if trades else None,
         limit=limit,
         breach=abs(total) > limit,
+        over_by=round(max(abs(total) - limit, 0), 2),
+        headroom=round(max(limit - abs(total), 0), 2),
     )
 
 
